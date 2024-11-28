@@ -1,4 +1,5 @@
 {% extends "files/site.html" %}
+{% block title %} {{file.name}} {% endblock %}
 {% block body %}
 <p>Here are the file details: {{ file }}</p>
 <p>All <a href={% url 'files' %}>files</a></p>
