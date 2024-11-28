@@ -35,7 +35,7 @@ from rest_framework.urlpatterns import format_suffix_patterns
 # ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 urlpatterns = [
-    path('admin-site/', admin.site.urls),
+    path('admin/', admin.site.urls),
     path('', views.home, name='home'),
     path('api/files/', views.files, name='files'),
     path('api/files/<int:file_id>/', views.file, name='file'),
