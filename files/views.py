@@ -1,26 +1,28 @@
-from django.http import HttpResponse, JsonResponse, Http404
+from django.http import HttpResponse
 from django.shortcuts import render, redirect
 
 from .models import File
-from .serializers import FileSerializer
+from .serializers import FileSerializer, UserSerializer
 from .forms import UploadForm
 
-from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 
 def home(request):
     return HttpResponse("Hello there, you're at the home page.")
 
 @api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
 def files(request, format=None):
     if request.method == 'GET':
-        data = File.objects.all()
+        data = request.user.file_set.all()
         serializer = FileSerializer(data, many=True)
         return Response({'files': serializer.data})
     
     elif request.method == 'POST':
-        serializer = FileSerializer(data=request.data)
+        serializer = FileSerializer(data=request.data, context={'request': request})
 
         if serializer.is_valid():
             serializer.save()
@@ -28,9 +30,10 @@ def files(request, format=None):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'PATCH', 'DELETE'])
+@permission_classes([IsAuthenticated])
 def file(request, file_id, format=None):
     try:
-        f = File.objects.get(pk=file_id)
+        f = request.user.file_set.get(pk=file_id)
     except File.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
     
@@ -80,3 +83,10 @@ def upload(request):
     if form.is_valid():
         form.save()
     return redirect(files)
+
+@api_view(['POST'])
+def register(request):
+    serializer = UserSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(status=status.HTTP_201_CREATED)
