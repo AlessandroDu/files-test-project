@@ -3,8 +3,66 @@ services:
     build: .
     volumes:
       - .:/app
+    profiles:
+      - prod
+    env_file:
+      - .env
     command: >
       sh -c "
+      python manage.py makemigrations --noinput &&
+      python manage.py migrate --noinput &&
       uwsgi --ini /app/init.ini"
     ports:
       - "80:8000"
+
+  webdev:
+    build: .
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles:
+      - dev
+    command: >
+      sh -c "
+      python manage.py makemigrations --noinput &&
+      python manage.py migrate --noinput &&
+      uwsgi --ini /app/init.ini"
+    ports:
+      - "8080:8000"
+    environment:
+      - DB_NAME=postgres
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DJANGO_SUPERUSER_PASSWORD=admin123
+      - DJANGO_SUPERUSER_USERNAME=admin
+      - DJANGO_SUPERUSER_EMAIL=admin@admin.com
+      - REDIS_HOST=redis
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app/
+
+  db:
+    image: postgres
+    profiles:
+      - dev
+    volumes:
+      - C:/users/USER/db-volume:/var/lib/postgresql/data
+    restart: always
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
