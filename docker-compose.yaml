@@ -1,10 +1,10 @@
 services:
   web:
+    profiles:
+      - prod
     build: .
     volumes:
       - .:/app
-    profiles:
-      - prod
     env_file:
       - .env
     command: >
