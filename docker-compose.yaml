@@ -1,0 +1,10 @@
+services:
+  web:
+    build: .
+    volumes:
+      - .:/app
+    command: >
+      sh -c "
+      uwsgi --ini /app/init.ini"
+    ports:
+      - "80:8000"
